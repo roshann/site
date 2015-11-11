@@ -70,5 +70,3 @@ def publish():
         local('git commit -m "Updating Blog"')
         local('git push')
 
-def push():
-    """Push to github"""
