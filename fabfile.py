@@ -61,11 +61,12 @@ def prepare_github():
 
 def publish():
     """Prepare Publish-ready site"""
-    with cd('output'):
+    with lcd('output'):
         local('git pull')
     local('pelican -s publishconf.py')
     local('cp CNAME output/')
-    with cd('output'):
+    with lcd('output/'):
+        local('ls')
         local('git add --all')
         local('git commit -m "Updating Blog"')
         local('git push')
