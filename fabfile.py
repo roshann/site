@@ -11,18 +11,6 @@ from pelican.server import ComplexHTTPRequestHandler
 env.deploy_path = 'output'
 DEPLOY_PATH = env.deploy_path
 
-# Remote server configuration
-production = 'root@localhost:22'
-dest_path = '/var/www'
-
-# Rackspace Cloud Files configuration settings
-env.cloudfiles_username = 'my_rackspace_username'
-env.cloudfiles_api_key = 'my_rackspace_api_key'
-env.cloudfiles_container = 'my_cloudfiles_container'
-
-# Github Pages configuration
-env.github_pages_branch = "gh-pages"
-
 # Port for `serve`
 PORT = 8000
 
@@ -66,29 +54,21 @@ def preview():
     """Build production version of site"""
     local('pelican -s publishconf.py')
 
-def cf_upload():
-    """Publish to Rackspace Cloud Files"""
-    rebuild()
-    with lcd(DEPLOY_PATH):
-        local('swift -v -A https://auth.api.rackspacecloud.com/v1.0 '
-              '-U {cloudfiles_username} '
-              '-K {cloudfiles_api_key} '
-              'upload -c {cloudfiles_container} .'.format(**env))
+def prepare_github():
+    local('rm -rf output')
+    local('mkdir output')
+    local('git clone git@personal:roshann/roshann.github.io.git output')
 
-@hosts(production)
 def publish():
-    """Publish to production via rsync"""
+    """Prepare Publish-ready site"""
+    with cd('output'):
+        local('git pull')
     local('pelican -s publishconf.py')
-    project.rsync_project(
-        remote_dir=dest_path,
-        exclude=".DS_Store",
-        local_dir=DEPLOY_PATH.rstrip('/') + '/',
-        delete=True,
-        extra_opts='-c',
-    )
+    local('cp CNAME output/')
+    with cd('output'):
+        local('git add --all')
+        local('git commit -m "Updating Blog"')
+        local('git push')
 
-def gh_pages():
-    """Publish to GitHub Pages"""
-    rebuild()
-    local("ghp-import -b {github_pages_branch} {deploy_path}".format(**env))
-    local("git push origin {github_pages_branch}".format(**env))
+def push():
+    """Push to github"""
