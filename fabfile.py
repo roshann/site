@@ -54,12 +54,10 @@ def preview():
     """Build production version of site"""
     local('pelican -s publishconf.py')
 
-def prepare_github():
+def publish():
     local('rm -rf output')
     local('mkdir output')
     local('git clone git@personal:roshann/roshann.github.io.git output')
-
-def publish():
     """Prepare Publish-ready site"""
     with lcd('output'):
         local('git pull')
